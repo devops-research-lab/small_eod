@@ -1,60 +1,42 @@
 name: JavaScript files
-
 on:
-  push:
-    branches:
-      - dev
-    paths:
-      - "frontend-project/**"
-      - ".github/**"
-      - 'Makefile'
-  pull_request:
-    paths:
-      - "frontend-project/**"
-      - ".github/**"
-      - 'Makefile'
+  push: null
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # renovate: tag=v2
-      - name: Set up Node 14.x
-        uses: actions/setup-node@1f8c6b94b26d0feae1e387ca63ccbdc44d27b561 # renovate: tag=v2
-        with:
-          node-version: "14.x"
-      - name: Install
-        run: yarn
-        working-directory: ./frontend-project/
-      - name: Lint
-        run: yarn lint
-        working-directory: ./frontend-project/
-      - name: Typecheck
-        run: yarn tsc
-        working-directory: ./frontend-project/
-      - name: Build
-        run: yarn build
-        working-directory: ./frontend-project/
-        env:
-          COMMIT_SHA: "{{github.sha}}"
-          COMMIT_BRANCH: "{{github.ref}}"
-      - name: Test
-        run: yarn test
-        working-directory: ./frontend-project/
-  deploy:
-    runs-on: ubuntu-latest
-    needs:
-      - test
-    steps:
-      - uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # renovate: tag=v2
-      - name: Build production image
-        run: make build_frontend
-      - name: "Docker login"
-        if: github.ref == 'refs/heads/dev'
-        env:
-          DOCKER_REGISTRY_URL: docker-registry.siecobywatelska.pl
-          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-        run: echo "${DOCKER_PASSWORD}" | docker login -u ${DOCKER_USERNAME} --password-stdin ${DOCKER_REGISTRY_URL}
-      - name: Push image
-        if: github.ref == 'refs/heads/dev'
-        run: make push_frontend
+    - uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579
+    - name: Set up Node 14.x
+      uses: actions/setup-node@1f8c6b94b26d0feae1e387ca63ccbdc44d27b561
+      with:
+        node-version: 14.x
+    - name: Install
+      run: yarn
+      working-directory: ./frontend-project/
+    - name: Lint
+      run: yarn lint
+      working-directory: ./frontend-project/
+    - name: Typecheck
+      run: yarn tsc
+      working-directory: ./frontend-project/
+    - name: Build
+      run: yarn build
+      working-directory: ./frontend-project/
+      env:
+        COMMIT_SHA: '{{github.sha}}'
+        COMMIT_BRANCH: '{{github.ref}}'
+    - name: Test
+      run: yarn test
+      working-directory: ./frontend-project/
+    - name: Build production image
+      run: make build_frontend
+    - name: Docker login
+      if: github.ref == 'refs/heads/dev'
+      env:
+        DOCKER_REGISTRY_URL: docker-registry.siecobywatelska.pl
+        DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+      run: echo "${DOCKER_PASSWORD}" | docker login -u ${DOCKER_USERNAME} --password-stdin ${DOCKER_REGISTRY_URL}
+    - name: Push image
+      if: github.ref == 'refs/heads/dev'
+      run: make push_frontend
